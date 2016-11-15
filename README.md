@@ -1,7 +1,7 @@
-# Balut
+# Wallach IX
 
 This is a project to develop **Collection API** for [Arrakis project](https://github.com/lucasmauricio/arrakis).
-The User API is beeing built in Python, using the Flask framework.
+The Collection API is beeing built in Python, using the Flask framework.
 
 ## Environment's configuration
 
