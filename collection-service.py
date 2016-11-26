@@ -10,7 +10,7 @@ __all__ = ['make_json_app']
 app = Flask("collection_app")
 
 enterprise_info = {"name": "My Fic Company", "shortname": "FicCO"}
-departments = {1: {"name": "Marketing"}, 2: {"name": "Sales"}, 3: {"name": "Human Resources"}, 4: {"name": "Produção"}}
+departments = {1: {"name": "Marketing"}, 2: {"name": "Sales"}, 3: {"name": "Human Resources"}, 4: {"name": "Production"}, 5: {"name": "Financial"}}
 
 #host_address = '0.0.0.0'
 host_port = 0
