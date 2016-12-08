@@ -1,6 +1,7 @@
 # coding: utf-8
 
-from flask import Flask, request, jsonify
+from flask import Flask, request #, jsonify
+from flask_json import FlaskJSON, JsonError, json_response, as_json
 import requests
 import socket
 import os
@@ -10,50 +11,51 @@ import sys
 __all__ = ['make_json_app']
 
 app = Flask("collection_app")
+json = FlaskJSON(app)
 
 enterprise_info = {"name": "My Fic Company", "shortname": "FicCO"}
-departments = {1: {"name": "Marketing"}, 2: {"name": "Sales"}, 3: {"name": "Human Resources"}, 4: {"name": "Production"}, 5: {"name": "Financial"}}
+collections = {1: {"name": "Marketing"}, 2: {"name": "Sales"}, 3: {"name": "Human Resources"}, 4: {"name": "Production"}, 5: {"name": "Financial"}}
 
 #host_address = '0.0.0.0'
 host_port = 0
 
 @app.route("/enterprise")
-def enterprise_api(department_id=None):
+def enterprise_api():
     if request.method == "GET":
-        return jsonify(enterprise_info)
+        return json_response(enterprise_info)
 
 
-@app.route("/department/<int:department_id>")
-def department_api(department_id=None):
+@app.route("/collection/<int:collection_id>")
+def collection_api(collection_id=None):
     if request.method == "GET":
-        if department_id:
+        if collection_id:
             # retorna uma noticia especifica
-            return jsonify(department=departments[department_id])
+            return json_response(collection=collections[collection_id]), 200
         else:
             # retorna todas as notícias
-            return jsonify(departments=departments)
+            return json_response(collections=collections), 200
 
     elif request.method == "POST":
         if request.is_json:
             # se o request veio com o mimetype "json" usa os dados para inserir novas noticias
-            departments.bulk_insert(request.json)
-            return "Department created successfully", 201
+            collections.bulk_insert(request.json)
+            return "Collection created successfully", 201
 
     elif request.method == "DELETE":
         # apaga uma noticia especifica
-        del departments[department_id]
-        return "Department deleted successfully", 204
+        del collections[collection_id]
+        return "Collection deleted successfully", 204
 
 
 #registrando API do serviço
 def api_register(api_id, api_data):
     logging.debug("registrando o serviço '{}'".format(api_id))
 
-    REGISTRADOR_API = 'http://registrator:8080/asset/'
+    REGISTRADOR_API = 'http://localhost:8080/asset/'
     headers = {'Content-Type': 'application/json'}
     try:
         r = requests.put(REGISTRADOR_API+api_id, headers=headers, json=api_data)
-        if r.status_code == requests.codes.created: #201
+        if r.status_code == requests.codes.created:
             logging.debug(" -registrado com sucesso: {}".format(r.status_code))
         else:
             logging.error(" -ocorreu erro no registro do serviço: {}".format(r.status_code))
@@ -88,6 +90,11 @@ def api_register(api_id, api_data):
         sys.exit(1)
 
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return json_response(message="The resource requested was not found at this server.", status=404)
+
+
 def run_server(port):
     logging.debug("")
     logging.info("initializing the app and its 2 services")
@@ -102,12 +109,12 @@ def run_server(port):
     logging.debug(payload)
     api_register(enterprise_api_id, payload);
 
-    #registrando serviço departments_api
-    departments_api_id = 'department'
+    #registrando serviço collections_api
+    collections_api_id = 'collection'
     #TODO automatizar a forma de recuperar o endereço do serviço
-    payload = {'name':'Departments data', "address": "http://{}:{}/department".format('localhost', port)}
+    payload = {'name':'collections data', "address": "http://{}:{}/collection".format('localhost', port)}
     logging.debug(payload)
-    api_register(departments_api_id, payload);
+    api_register(collections_api_id, payload);
 
     app.run(host= '0.0.0.0', port=port, debug=True, use_reloader=False)
 
