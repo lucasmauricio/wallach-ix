@@ -5,6 +5,7 @@ import requests
 import socket
 import os
 import logging
+import sys
 
 __all__ = ['make_json_app']
 
@@ -48,14 +49,43 @@ def department_api(department_id=None):
 def api_register(api_id, api_data):
     logging.debug("registrando o serviço '{}'".format(api_id))
 
-    REGISTRADOR_API = 'http://registrator-serv:8080/asset/'
+    REGISTRADOR_API = "http://registrator-serv:8080/asset/"
     headers = {'Content-Type': 'application/json'}
-    r = requests.put(REGISTRADOR_API+api_id, headers=headers, json=api_data)
-    if r.status_code == 201:
-        logging.debug(" -registrado com sucesso: {}".format(r.status_code))
-    else:
-        logging.error(" -ocorreu erro no registro do serviço: {}".format(r.status_code))
-        logging.debug(" ->resposta do registrador: " + r.text)
+    try:
+        r = requests.put(REGISTRADOR_API+api_id, headers=headers, json=api_data)
+        if r.status_code == requests.codes.created: #201
+            logging.debug(" -registrado com sucesso: {}".format(r.status_code))
+        else:
+            logging.error(" -ocorreu erro no registro do serviço: {}".format(r.status_code))
+            logging.debug(" ->resposta do registrador: " + r.text)
+            sys.exit(1)
+    except requests.exceptions.ConnectionError as ce:
+        # http://dev.mobify.com/blog/http-requests-are-hard/
+        logging.error("These aren't the domains we're looking for. '%s'." % REGISTRADOR_API)
+        logging.debug(ce)
+        sys.exit(1)
+    except requests.exceptions.HTTPError as he:
+        #TODO testar um bad request
+        # Tell the user their URL was bad and try a different one
+        logging.error("O serviço não pode ser iniciado porque ocorreu TooManyRedirects ao conectar no registrador em '%s'." % REGISTRADOR_API)
+        logging.debug(he)
+        sys.exit(1)
+    except (requests.exceptions.Timeout, requests.exceptions.ReadTimeout) as t:
+        #TODO testar ou remover
+        logging.error("It's not possible to register the service at '%s' because the server is too slow." % REGISTRADOR_API)
+        logging.debug(t)
+        sys.exit(1)
+    except requests.exceptions.TooManyRedirects as tmr:
+        #TODO testar ou remover
+        logging.error("O serviço não pode ser iniciado porque ocorreu TooManyRedirects ao conectar no registrador em '%s'." % REGISTRADOR_API)
+        logging.debug(tmr)
+        sys.exit(1)
+    except requests.exceptions.RequestException as re:
+        #TODO testar ou remover
+        # catastrophic error. bail.
+        logging.error("O serviço não pode ser iniciado porque ocorreu erro '%s' ao conectar no registrador em '%s'." % (re.errno, REGISTRADOR_API))
+        logging.debug(re)
+        sys.exit(1)
 
 
 def run_server(port):
@@ -84,7 +114,7 @@ def run_server(port):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s (%(threadName)-6s) %(message)s',
+                        format='%(asctime)s %(message)s',
                         )
     logging.info("initializing the app")
 
