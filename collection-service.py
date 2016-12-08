@@ -30,6 +30,7 @@ def collection_api(collection_id=None):
     try:
         if request.method == "GET":
             if collection_id:
+                # TODO handle 410 error (Gone): http://flask.pocoo.org/docs/0.11/patterns/errorpages/
                 # retorna uma noticia especifica
                 return json_response(collection=collections[collection_id]), 200
             else:
@@ -93,13 +94,11 @@ def api_register(api_id, api_data):
         sys.exit(1)
 
 
-#TODO handle 410 error (Gone): http://flask.pocoo.org/docs/0.11/patterns/errorpages/
 @app.errorhandler(404)
 def page_not_found_handler(e):
     return json_response(message="The resource requested was not found at this server.", status=404)
 
 
-#FIXME this way is not working
 @app.errorhandler(500)
 def internal_server_error_handler(e):
     return json_response(message="Something's gone wrong and the server could not deal with your request.", status=500)
