@@ -47,7 +47,7 @@ def department_api(department_id=None):
 def api_register(api_id, api_data):
     print "registrando o serviço '{}'".format(api_id)
 
-    REGISTRADOR_API = 'http://registrator-serv:8080/asset/'
+    REGISTRADOR_API = 'http://registrator:8080/asset/'
     headers = {'Content-Type': 'application/json'}
     r = requests.put(REGISTRADOR_API+api_id, headers=headers, json=api_data)
     if r.status_code == 201:
