@@ -1,7 +1,7 @@
 # coding: utf-8
 
-from flask import Flask, request #, jsonify
-from flask_json import FlaskJSON, JsonError, json_response, as_json
+from flask import Flask, request
+from flask_json import FlaskJSON, json_response
 import requests
 import socket
 import os
