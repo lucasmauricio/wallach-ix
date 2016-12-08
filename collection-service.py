@@ -114,7 +114,7 @@ def run_server(port):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s %(message)s',
+                        format='%(asctime)s [%(levelname)-5s]: %(message)s',
                         )
     logging.info("initializing the app")
 
