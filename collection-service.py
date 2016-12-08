@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from flask import Flask, request
+from flask import Flask, request, abort
 from flask_json import FlaskJSON, json_response
 import requests
 import socket
@@ -27,24 +27,27 @@ def enterprise_api():
 
 @app.route("/collection/<int:collection_id>")
 def collection_api(collection_id=None):
-    if request.method == "GET":
-        if collection_id:
-            # retorna uma noticia especifica
-            return json_response(collection=collections[collection_id]), 200
-        else:
-            # retorna todas as notícias
-            return json_response(collections=collections), 200
+    try:
+        if request.method == "GET":
+            if collection_id:
+                # retorna uma noticia especifica
+                return json_response(collection=collections[collection_id]), 200
+            else:
+                # retorna todas as notícias
+                return json_response(collections=collections), 200
 
-    elif request.method == "POST":
-        if request.is_json:
-            # se o request veio com o mimetype "json" usa os dados para inserir novas noticias
-            collections.bulk_insert(request.json)
-            return "Collection created successfully", 201
+        elif request.method == "POST":
+            if request.is_json:
+                # se o request veio com o mimetype "json" usa os dados para inserir novas noticias
+                collections.bulk_insert(request.json)
+                return "Collection created successfully", 201
 
-    elif request.method == "DELETE":
-        # apaga uma noticia especifica
-        del collections[collection_id]
-        return "Collection deleted successfully", 204
+        elif request.method == "DELETE":
+            # apaga uma noticia especifica
+            del collections[collection_id]
+            return "Collection deleted successfully", 204
+    except Exception:
+        abort(500)
 
 
 #registrando API do serviço
@@ -90,9 +93,16 @@ def api_register(api_id, api_data):
         sys.exit(1)
 
 
+#TODO handle 410 error (Gone): http://flask.pocoo.org/docs/0.11/patterns/errorpages/
 @app.errorhandler(404)
-def page_not_found(e):
+def page_not_found_handler(e):
     return json_response(message="The resource requested was not found at this server.", status=404)
+
+
+#FIXME this way is not working
+@app.errorhandler(500)
+def internal_server_error_handler(e):
+    return json_response(message="Something's gone wrong and the server could not deal with your request.", status=500)
 
 
 def run_server(port):
@@ -116,7 +126,7 @@ def run_server(port):
     logging.debug(payload)
     api_register(collections_api_id, payload);
 
-    app.run(host= '0.0.0.0', port=port, debug=True, use_reloader=False)
+    app.run(host= '0.0.0.0', port=port, debug=False, use_reloader=False)
 
 
 if __name__ == '__main__':
