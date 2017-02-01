@@ -19,10 +19,10 @@ collections = {1: {"name": "Marketing"}, 2: {"name": "Sales"}, 3: {"name": "Huma
 #host_address = '0.0.0.0'
 host_port = 0
 
-@app.route("/enterprise")
+@app.route("/collections")
 def enterprise_api():
     if request.method == "GET":
-        return json_response(enterprise_info)
+        return json_response(enterprise_info), 200
 
 
 @app.route("/collection/<int:collection_id>")
@@ -55,7 +55,7 @@ def collection_api(collection_id=None):
 def api_register(api_id, api_data):
     logging.debug("registrando o serviço '{}'".format(api_id))
 
-    REGISTRADOR_API = 'http://localhost:8080/asset/'
+    REGISTRADOR_API = 'http://registrator:8080/asset/'
     headers = {'Content-Type': 'application/json'}
     try:
         r = requests.put(REGISTRADOR_API+api_id, headers=headers, json=api_data)
@@ -112,16 +112,16 @@ def run_server(port):
     logging.debug(app.config.get('PORT'))
 
     #registrando serviço enterprise_api
-    enterprise_api_id = 'enterprise'
+    enterprise_api_id = 'collections'
     #TODO automatizar a forma de recuperar o endereço do serviço
-    payload = {'name':'Enterprise data', "address": "http://{}:{}/enterprise".format('localhost', port)}
+    payload = {'name':'collections data', "address": "http://{}:{}/collections".format('localhost', port)}
     logging.debug(payload)
     api_register(enterprise_api_id, payload);
 
     #registrando serviço collections_api
     collections_api_id = 'collection'
     #TODO automatizar a forma de recuperar o endereço do serviço
-    payload = {'name':'collections data', "address": "http://{}:{}/collection".format('localhost', port)}
+    payload = {'name':'collection data', "address": "http://{}:{}/collection/{}collection_id{}".format('localhost', port, '{', '}')}
     logging.debug(payload)
     api_register(collections_api_id, payload);
 
@@ -134,7 +134,7 @@ if __name__ == '__main__':
                         )
     logging.info("initializing the app")
 
-    host_port = int(os.environ.get('PORT', 8000))
+    host_port = int(os.environ.get('PORT', 7575))
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #TODO trocar ou não pelo endereço de rede da máquina??
